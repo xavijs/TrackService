@@ -53,7 +53,7 @@ public class BackgroundService extends Service
             System.out.println("XJS Status changeeedddd");
             Log.e(TAG, "onStatusChanged: " + provider);
 
-            Toast.makeText(getApplicationContext(), "Yeeaahhhh", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "Status changedd", Toast.LENGTH_LONG).show();
 
         }
     }
