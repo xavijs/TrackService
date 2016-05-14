@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">My Application1</string>
+    <string name="provider_settings_message">ASK ENABLE PROVIDERSSS</string>
+    <string name="provider_settings_yes">YESSS</string>
+</resources>
