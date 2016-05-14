@@ -1,69 +1,131 @@
 package com.example.xavi.myapplication1;
 
-import android.Manifest;
-import android.app.IntentService;
+import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.location.Location;
-import android.support.v4.app.ActivityCompat;
-import android.widget.TextView;
+import android.location.LocationManager;
+import android.os.Bundle;
+import android.os.IBinder;
+import android.util.Log;
+import android.widget.Toast;
 
-class BackgroundService extends IntentService {
-    /**
-     * Creates an IntentService.  Invoked by your subclass's constructor.
-     *
-     * @param name Used to name the worker thread, important only for debugging.
-     */
-    public BackgroundService(String name) {
-        super(name);
-        System.out.println("Este constructor rarooo XJS");
-    }
 
-    @Override
-    protected void onHandleIntent(Intent workIntent) {
-        // Gets data from the incoming Intent
-        System.out.println("Empieza el servicio GUAYYYYY   XJS");
+public class BackgroundService extends Service
+{
+    private static final String TAG = "BOOMBOOMTESTGPS";
+    private LocationManager mLocationManager = null;
+    private static final int LOCATION_INTERVAL = 1000;
+    private static final float LOCATION_DISTANCE = 1f;
 
-        String dataString = workIntent.getDataString();
-        // Do work here, based on the contents of dataString
-
-        TrackerSettings settings =
-                new TrackerSettings()
-                        .setUseGPS(true)
-                        .setUseNetwork(true)
-                        .setUsePassive(true)
-                        .setTimeBetweenUpdates(10 * 1000)
-                        .setMetersBetweenUpdates(1);
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            System.out.println("PERMISIOONSS CHECCKKK");
-            return;
+    private class LocationListener implements android.location.LocationListener{
+        Location mLastLocation;
+        public LocationListener(String provider)
+        {
+            Log.e(TAG, "LocationListener " + provider);
+            mLastLocation = new Location(provider);
         }
-        LocationTracker tracker = new LocationTracker(this, settings) {
+        @Override
+        public void onLocationChanged(Location location)
+        {
+            Log.e(TAG, "onLocationChanged: " + location);
+            System.out.println("XJS Location changeeedddd");
 
-            @Override
-            public void onLocationFound(Location location) {
-                // Do some stuff when a new location has been found.
+            location.toString();
+            Toast.makeText(getApplicationContext(), location.toString(), Toast.LENGTH_LONG).show();
 
-                System.out.println("Location foouundddd!! toma yaaa");
 
+            mLastLocation.set(location);
+        }
+        @Override
+        public void onProviderDisabled(String provider)
+        {
+            Log.e(TAG, "onProviderDisabled: " + provider);
+        }
+        @Override
+        public void onProviderEnabled(String provider)
+        {
+            Log.e(TAG, "onProviderEnabled: " + provider);
+        }
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras)
+        {
+            System.out.println("XJS Status changeeedddd");
+            Log.e(TAG, "onStatusChanged: " + provider);
+
+            Toast.makeText(getApplicationContext(), "Yeeaahhhh", Toast.LENGTH_LONG).show();
+
+        }
+    }
+    LocationListener[] mLocationListeners = new LocationListener[] {
+            new LocationListener(LocationManager.GPS_PROVIDER),
+            new LocationListener(LocationManager.NETWORK_PROVIDER),
+            new LocationListener(LocationManager.PASSIVE_PROVIDER)
+    };
+    @Override
+    public IBinder onBind(Intent arg0)
+    {
+        return null;
+    }
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId)
+    {
+        Log.e(TAG, "onStartCommand");
+        super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
+    }
+    @Override
+    public void onCreate()
+    {
+        Log.e(TAG, "onCreate");
+        initializeLocationManager();
+        try {
+            mLocationManager.requestLocationUpdates(
+                    LocationManager.NETWORK_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
+                    mLocationListeners[1]);
+        } catch (java.lang.SecurityException ex) {
+            Log.i(TAG, "fail to request location update, ignore", ex);
+        } catch (IllegalArgumentException ex) {
+            Log.d(TAG, "network provider does not exist, " + ex.getMessage());
+        }
+        try {
+            mLocationManager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
+                    mLocationListeners[0]);
+        } catch (java.lang.SecurityException ex) {
+            Log.i(TAG, "fail to request location update, ignore", ex);
+        } catch (IllegalArgumentException ex) {
+            Log.d(TAG, "gps provider does not exist " + ex.getMessage());
+        }
+        try {
+            mLocationManager.requestLocationUpdates(
+                    LocationManager.PASSIVE_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
+                    mLocationListeners[2]);
+        } catch (java.lang.SecurityException ex) {
+            Log.i(TAG, "fail to request location update, ignore", ex);
+        } catch (IllegalArgumentException ex) {
+            Log.d(TAG, "gps provider does not exist " + ex.getMessage());
+        }
+    }
+    @Override
+    public void onDestroy()
+    {
+        Log.e(TAG, "onDestroy");
+        super.onDestroy();
+        if (mLocationManager != null) {
+            for (int i = 0; i < mLocationListeners.length; i++) {
+                try {
+                    mLocationManager.removeUpdates(mLocationListeners[i]);
+                } catch (Exception ex) {
+                    Log.i(TAG, "fail to remove location listners, ignore", ex);
+                }
             }
-
-            @Override
-            public void onTimeout() {
-                System.out.println("TIMEEOUUTTT JOPETAS");
-            }
-        };
-
-        tracker.startListening();
-
-
+        }
+    }
+    private void initializeLocationManager() {
+        Log.e(TAG, "initializeLocationManager");
+        if (mLocationManager == null) {
+            mLocationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+        }
     }
 }

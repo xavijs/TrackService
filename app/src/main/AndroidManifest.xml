@@ -4,7 +4,7 @@
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
-    <service android:name="com.example.xavi.myapplication1.BackgroundService"></service>
+
 
     <application
         android:allowBackup="true"
@@ -19,6 +19,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service android:name="com.example.xavi.myapplication1.BackgroundService" android:exported="true"></service>
     </application>
 
 </manifest>
