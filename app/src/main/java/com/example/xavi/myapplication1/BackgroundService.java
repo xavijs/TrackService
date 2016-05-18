@@ -10,6 +10,8 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.xavi.myapplication1.conf.HttpPostLocationSenderConfiguration;
+
 import org.json.JSONException;
 
 import java.io.IOException;
@@ -22,14 +24,19 @@ public class BackgroundService extends Service
     private static final int LOCATION_INTERVAL = 1000;
     private static final float LOCATION_DISTANCE = 1f;
 
+    HttpPostLocationSender sender;
+
+    public BackgroundService() {
+        HttpPostLocationSenderConfiguration httpPostLocationSenderConfiguration = new HttpPostLocationSenderConfiguration();
+        sender = new HttpPostLocationSender(httpPostLocationSenderConfiguration);
+    }
+
     private class LocationListener implements android.location.LocationListener{
         Location mLastLocation;
-        HttpPostLocationSender sender;
+
         public LocationListener(String provider)
         {
-            Log.e(TAG, "LocationListener " + provider);
             mLastLocation = new Location(provider);
-            sender = new HttpPostLocationSender();
 
         }
         @Override
@@ -40,7 +47,7 @@ public class BackgroundService extends Service
 
 
             try {
-                sender.storeLocation(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
+                sender.storeLocation(location);
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (JSONException e) {
