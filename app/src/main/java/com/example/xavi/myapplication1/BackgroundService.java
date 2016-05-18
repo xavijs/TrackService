@@ -20,9 +20,9 @@ import java.io.IOException;
 
 public class BackgroundService extends Service
 {
-    private static final String TAG = "BOOMBOOMTESTGPS";
+    private static final String TAG = "XJS";
     private LocationManager mLocationManager = null;
-    private static final int LOCATION_INTERVAL = 1000;
+    private static final int LOCATION_INTERVAL = 5000;
     private static final float LOCATION_DISTANCE = 1f;
 
     HttpPostLocationSender sender;
@@ -31,8 +31,7 @@ public class BackgroundService extends Service
 
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
-        HttpPostLocationSenderConfiguration httpPostLocationSenderConfiguration = new HttpPostLocationSenderConfiguration();
-        sender = new HttpPostLocationSender(httpPostLocationSenderConfiguration);
+        sender = new HttpPostLocationSender(new HttpPostLocationSenderConfiguration());
 
     }
 
@@ -47,41 +46,35 @@ public class BackgroundService extends Service
         @Override
         public void onLocationChanged(Location location)
         {
-            Log.e(TAG, "onLocationChanged: " + location);
-            System.out.println("XJS Location changeeedddd");
-
+            Log.i(TAG, "onLocationChanged: " + location.toString());
 
             try {
                 sender.storeLocation(location);
             } catch (IOException e) {
+                Log.e(TAG, e.getMessage());
                 e.printStackTrace();
             } catch (JSONException e) {
+                Log.e(TAG, e.getMessage());
                 e.printStackTrace();
             }
 
-            Toast.makeText(getApplicationContext(), location.toString(), Toast.LENGTH_LONG).show();
-
-
             mLastLocation.set(location);
+            Toast.makeText(getApplicationContext(), location.toString(), Toast.LENGTH_LONG).show();
         }
         @Override
         public void onProviderDisabled(String provider)
         {
-            Log.e(TAG, "onProviderDisabled: " + provider);
+            Log.i(TAG, "onProviderDisabled: " + provider);
         }
         @Override
         public void onProviderEnabled(String provider)
         {
-            Log.e(TAG, "onProviderEnabled: " + provider);
+            Log.i(TAG, "onProviderEnabled: " + provider);
         }
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras)
         {
-            System.out.println("XJS Status changeeedddd");
-            Log.e(TAG, "onStatusChanged: " + provider);
-
-            Toast.makeText(getApplicationContext(), "Status changedd", Toast.LENGTH_LONG).show();
-
+            Log.i(TAG, "onStatusChanged: " + provider);
         }
     }
     LocationListener[] mLocationListeners = new LocationListener[] {
@@ -97,14 +90,14 @@ public class BackgroundService extends Service
     @Override
     public int onStartCommand(Intent intent, int flags, int startId)
     {
-        Log.e(TAG, "onStartCommand");
+        Log.i(TAG, "onStartCommand");
         super.onStartCommand(intent, flags, startId);
         return START_STICKY;
     }
     @Override
     public void onCreate()
     {
-        Log.e(TAG, "onCreate");
+        Log.i(TAG, "onCreate");
         initializeLocationManager();
         try {
             mLocationManager.requestLocationUpdates(
@@ -144,13 +137,13 @@ public class BackgroundService extends Service
                 try {
                     mLocationManager.removeUpdates(mLocationListeners[i]);
                 } catch (Exception ex) {
-                    Log.i(TAG, "fail to remove location listners, ignore", ex);
+                    Log.e(TAG, "fail to remove location listners, ignore", ex);
                 }
             }
         }
     }
     private void initializeLocationManager() {
-        Log.e(TAG, "initializeLocationManager");
+        Log.i(TAG, "initializeLocationManager");
         if (mLocationManager == null) {
             mLocationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         }
