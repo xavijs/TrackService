@@ -10,6 +10,10 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
+import org.json.JSONException;
+
+import java.io.IOException;
+
 
 public class BackgroundService extends Service
 {
@@ -20,10 +24,13 @@ public class BackgroundService extends Service
 
     private class LocationListener implements android.location.LocationListener{
         Location mLastLocation;
+        HttpPostLocationSender sender;
         public LocationListener(String provider)
         {
             Log.e(TAG, "LocationListener " + provider);
             mLastLocation = new Location(provider);
+            sender = new HttpPostLocationSender();
+
         }
         @Override
         public void onLocationChanged(Location location)
@@ -31,7 +38,15 @@ public class BackgroundService extends Service
             Log.e(TAG, "onLocationChanged: " + location);
             System.out.println("XJS Location changeeedddd");
 
-            location.toString();
+
+            try {
+                sender.storeLocation(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
             Toast.makeText(getApplicationContext(), location.toString(), Toast.LENGTH_LONG).show();
 
 
