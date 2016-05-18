@@ -7,6 +7,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.StrictMode;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -27,8 +28,12 @@ public class BackgroundService extends Service
     HttpPostLocationSender sender;
 
     public BackgroundService() {
+
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
         HttpPostLocationSenderConfiguration httpPostLocationSenderConfiguration = new HttpPostLocationSenderConfiguration();
         sender = new HttpPostLocationSender(httpPostLocationSenderConfiguration);
+
     }
 
     private class LocationListener implements android.location.LocationListener{
