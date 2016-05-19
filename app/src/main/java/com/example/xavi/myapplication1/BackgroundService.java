@@ -8,6 +8,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.StrictMode;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -21,9 +22,11 @@ import java.io.IOException;
 public class BackgroundService extends Service
 {
     private static final String TAG = "XJS";
+    private String uuid;
     private LocationManager mLocationManager = null;
-    private static final int LOCATION_INTERVAL = 5000;
+    private static final int LOCATION_INTERVAL = 10000;
     private static final float LOCATION_DISTANCE = 1f;
+
 
     HttpPostLocationSender sender;
 
@@ -38,6 +41,7 @@ public class BackgroundService extends Service
     private class LocationListener implements android.location.LocationListener{
         Location mLastLocation;
 
+
         public LocationListener(String provider)
         {
             mLastLocation = new Location(provider);
@@ -49,7 +53,7 @@ public class BackgroundService extends Service
             Log.i(TAG, "onLocationChanged: " + location.toString());
 
             try {
-                sender.storeLocation(location);
+                sender.storeLocation(location, uuid);
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage());
                 e.printStackTrace();
@@ -99,32 +103,15 @@ public class BackgroundService extends Service
     {
         Log.i(TAG, "onCreate");
         initializeLocationManager();
+
         try {
-            mLocationManager.requestLocationUpdates(
-                    LocationManager.NETWORK_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
-                    mLocationListeners[1]);
+            getGPSlocation();
+            getNetworkLocation();
+            getPassiveLocation();
         } catch (java.lang.SecurityException ex) {
             Log.i(TAG, "fail to request location update, ignore", ex);
         } catch (IllegalArgumentException ex) {
-            Log.d(TAG, "network provider does not exist, " + ex.getMessage());
-        }
-        try {
-            mLocationManager.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
-                    mLocationListeners[0]);
-        } catch (java.lang.SecurityException ex) {
-            Log.i(TAG, "fail to request location update, ignore", ex);
-        } catch (IllegalArgumentException ex) {
-            Log.d(TAG, "gps provider does not exist " + ex.getMessage());
-        }
-        try {
-            mLocationManager.requestLocationUpdates(
-                    LocationManager.PASSIVE_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
-                    mLocationListeners[2]);
-        } catch (java.lang.SecurityException ex) {
-            Log.i(TAG, "fail to request location update, ignore", ex);
-        } catch (IllegalArgumentException ex) {
-            Log.d(TAG, "gps provider does not exist " + ex.getMessage());
+            Log.d(TAG, "provider does not exist " + ex.getMessage());
         }
     }
     @Override
@@ -146,6 +133,26 @@ public class BackgroundService extends Service
         Log.i(TAG, "initializeLocationManager");
         if (mLocationManager == null) {
             mLocationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+            TelephonyManager tManager = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
+            uuid = tManager.getDeviceId();
         }
+    }
+
+    private void getGPSlocation() {
+        mLocationManager.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
+                mLocationListeners[0]);
+    }
+
+    private void getNetworkLocation(){
+        mLocationManager.requestLocationUpdates(
+                LocationManager.NETWORK_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
+                mLocationListeners[1]);
+    }
+
+    private void getPassiveLocation() {
+        mLocationManager.requestLocationUpdates(
+                LocationManager.PASSIVE_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
+                mLocationListeners[2]);
     }
 }
