@@ -22,7 +22,7 @@ public class HttpPostLocationSender {
         this.httpPostLocationSenderConfiguration = configuration;
     }
 
-    public void storeLocation(Location location) throws IOException, JSONException {
+    public void storeLocation(Location location, String uuid) throws IOException, JSONException {
 
 
         JSONObject json = new JSONObject();
@@ -34,6 +34,7 @@ public class HttpPostLocationSender {
         json.put("altitude", location.getAltitude());
         json.put("timestamp", location.getTime());
         json.put("provider", location.getProvider());
+        json.put("UUID", uuid);
 
         String json_string = json.toString();
 
